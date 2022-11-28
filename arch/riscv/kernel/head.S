@@ -95,7 +95,7 @@ _supervisor:
 	la t2, trap_s
 	li t3, 0xffffffdf80000000 #-0x80000000 + 0xffffffe000000000
 	add t2, t2, t3 #trap_s的虚拟地址
-	csrw stvec t2
+	csrw stvec, t2
 	#令s0=start_kernel
 	la s0, start_kernel
 	add s0, s0, t3
