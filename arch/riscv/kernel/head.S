@@ -76,6 +76,36 @@ clean_loop:
 
 _supervisor:
 	/* your code */
+	#设置satp=0，关闭MMU
+	csrw satp, zero
+	#设置sp=stack_top
+	la sp, stack_top
+	#调用paging_init
+	call paging_init
+	#设置satp，打开MMU
+	addi t0, t0, 8
+	slli t0, t0, 60 #MODE:satp[63:60]=8,ASID:satp[59:44]=0
+	la t1, _end
+	srli t1, t1, 12 #PPN:satp[43:0]=_end
+	add t0, t0, t1
+	csrw satp, t0
+	#执行sfence.vma
+	sfence.vma
+	#设置stvec=trap_s
+	la t2, trap_s
+	li t3, 0xffffffdf80000000 #-0x80000000 + 0xffffffe000000000
+	add t2, t2, t3 #trap_s的虚拟地址
+	csrw stvec t2
+	#令s0=start_kernel
+	la s0, start_kernel
+	add s0, s0, t3
+	#设置sp=init_stack_top
+	la sp, init_stack_top
+	add sp, sp, t3
+	#跳转start_kernel 
+	la t1, start_kernel
+	add t1, t1, t3
+	jr t1
 
 _mtrap:
 	# 交换 mscratch 和 sp
