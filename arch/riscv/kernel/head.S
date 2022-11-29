@@ -83,7 +83,7 @@ _supervisor:
 	#调用paging_init
 	call paging_init
 	#设置satp，打开MMU
-	addi t0, t0, 8
+	addi t0, zero, 8
 	slli t0, t0, 60 #MODE:satp[63:60]=8,ASID:satp[59:44]=0
 	la t1, _end
 	srli t1, t1, 12 #PPN:satp[43:0]=_end
