@@ -17,6 +17,13 @@ typedef unsigned long long uint64_t;
 /* 定义 task 的状态，本 Lab 中 task 只需要一种状态。*/
 #define TASK_RUNNING 0
 
+#define PREEMPT_ENABLE 0
+#define PREEMPT_DISABLE 1
+
+/* Lab3中进程的数量以及每个进程初始的时间片 */
+#define LAB_TEST_NUM        4
+#define LAB_TEST_COUNTER    5 
+
 /* 当前进程 */
 extern struct task_struct *current;
 

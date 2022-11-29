@@ -95,7 +95,7 @@ trap_s:
 
 init_epc:
 	/* your code */
-	la  t0, test
+	la  t0, dead_loop
 	csrw sepc, t0
 	sret
 	
