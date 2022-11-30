@@ -46,7 +46,9 @@ void task_init(void) {
     task[i]->thread.sp = (unsigned long long)task[i] + TASK_SIZE;
     task[i]->thread.ra = &init_epc;
 
-    printf("[PID = %d] Process Create Successfully!\n", task[i]->pid);
+    puts("[PID =");
+    puti(task[i]->pid);
+    puts("] Process Create Successfully!\n");
   }
   task_init_done = 1;
 }
@@ -55,8 +57,13 @@ void do_timer(void) {
   /* your code */ 
 
   if (!task_init_done) return;
-  printf("[*PID = %d] Context Calculation: counter = %d,priority = %d\n",
-         current->pid, current->counter, current->priority);
+  puts("[*PID = ");
+  puti(current->pid);
+  puts("] Context Calculation: counter = ");
+  puti(current->counter);
+  puts(", priority = ");
+  puti(current->priority);
+  puts("\n");
   // current process's counter -1, judge whether to schedule or go on.
   /* your code */
   current->counter--;
@@ -78,12 +85,17 @@ void schedule(void) {
   }
 
   if(shortest_pid == 0) {
-    printf("all is done, reset all.\n");
+    puts("all is done, reset all.\n");
     for(int i=LAB_TEST_COUNTER; i>=1; i--){
       task[i]->counter = rand()%100;
       task[i]->priority = rand()%100;
-      printf("[*PID = %d] Reset: counter = %d,priority = %d\n",
-              task[i]->counter, task[i]->priority);
+      puts("[*PID = ");
+      puti(task[i]->pid);
+      puts("] Reset: counter = ");
+      puti(task[i]->counter);
+      puts(", priority = ");
+      puti(task[i]->priority);
+      puts("\n");
     }
     schedule();
     next = 0;
@@ -92,12 +104,21 @@ void schedule(void) {
     next = shortest_pid;
   
   if (current->pid != task[next]->pid) {
-    printf(
-      "[ %d -> %d ] Switch from task %d[%lx] to task %d[%lx], prio: %d, "
-      "counter: %d\n",
-      current->pid, task[next]->pid, current->pid,
-      (unsigned long)current->thread.sp, task[next]->pid,
-      (unsigned long)task[next], task[next]->priority, task[next]->counter);
+    puts("[ ");
+    puti(current->pid);
+    puts(" -> ");
+    puti(task[next]->pid);
+    puts(" ] Switch from task ");
+    puti(current->pid);
+    puts("["); puti((unsigned long)current->thread.sp); 
+    puts("] to task "); 
+    puti(task[next]->pid);
+    puts("["); puti((unsigned long)task[next]->thread.sp); 
+    puts("], prio: "); 
+    puti(task[next]->priority);
+    puts(", counter: ");
+    puti(task[next]->counter);
+    puts("\n");
   }
   switch_to(task[next]);
 }
