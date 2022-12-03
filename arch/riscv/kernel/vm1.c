@@ -1,7 +1,7 @@
 #include "vm.h"
 #include "put.h"
 
-#define PAGE_SIZE 0x1000 //4kb
+#define PAGE_SIZE 4096L //4kb
 #define PAGE_FAULT -1
 #define RWX 7
 
@@ -15,7 +15,6 @@ extern unsigned long long _end;
 int page_count = 0;
 
 uint64_t* trace_pte(uint64_t* pgtbl,uint64_t va);
-
 
 
 
@@ -138,11 +137,21 @@ void paging_init() {
   uint64_t *pgtbl = &_end;
   // pgtbl = (uint64_t *) 0x80007000
 
-  /* 映射内核起始的16MB空间到高地址 */
+  for (int i = 0; i < 512; i++)
+      pgtbl[i] = 0;
 
-  /*kernel起始的16mb映射到高地址*/
+  /* 映射内核起始的16MB空间到高地址 */
+  /* kernel起始的16mb映射到高地址*/
+
   // P --> V
-  create_mapping(pgtbl, (uint64_t)V_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+  // create_mapping(pgtbl, (uint64_t)V_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+
+  for (uint64_t va = 0xffffffe000000000; va < 0xffffffe001000000; va = va + 0x1000)
+  {
+        create_mapping(pgtbl, va, va - offset, PAGE_SIZE, RWX);
+        create_mapping(pgtbl, va - offset, va - offset, PAGE_SIZE, RWX);
+  }
+
 
 
   puts(" P --> V mapping success\n");
@@ -157,14 +166,9 @@ void paging_init() {
   create_mapping(pgtbl, (uint64_t)UART_ADDR, (uint64_t)UART_ADDR, (uint64_t)MAP_SIZE, RWX);
 
   puts(" UART --> UART mapping success\n");
-  
-  // create_mapping(pgtbl, (uint64_t)(&text_start + offset), (uint64_t)(&text_start), 0x2000, RWX);
 
-  // create_mapping(pgtbl, (uint64_t)(&rodata_start + offset), (uint64_t)(&rodata_start), 0x2000, RWX);
 
-  // create_mapping(pgtbl, (uint64_t)(&text_start + offset), (uint64_t)(&text_start), 0x2000, RWX);
 
-  // create_mapping(pgtbl, (uint64_t)(&text_start + offset), (uint64_t)(&text_start), 0x2000, RWX);
 
 }
 

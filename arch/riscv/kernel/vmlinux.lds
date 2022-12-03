@@ -3,10 +3,10 @@ ENTRY( _start )
 MEMORY {
   ram (wxa!ri) : ORIGIN = 0x0000000080000000, LENGTH = 16M
   /* for running */
-  /* ramv (wxa!ri) : ORIGIN = 0xffffffe000000000, LENGTH = 4096M */
+  ramv (wxa!ri) : ORIGIN = 0xffffffe000000000, LENGTH = 4096M
 
   /* for initial debug */
-  ramv (wxa!ri) : ORIGIN = 0x0000000080000000, LENGTH = 4096M
+  /* ramv (wxa!ri) : ORIGIN = 0x0000000080000000, LENGTH = 4096M */
 }
 PHDRS {
   text PT_LOAD;
