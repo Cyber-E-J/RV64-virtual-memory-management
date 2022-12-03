@@ -154,8 +154,6 @@ void paging_init() {
         create_mapping(pgtbl, va - offset, va - offset, PAGE_SIZE, RWX);
   }
 
-
-  puts(" P --> V mapping success\n");
   // P --> P
   /*kernel起始地址的16mb做等值映射*/
   // create_mapping(pgtbl,(uint64_t)P_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
@@ -164,16 +162,9 @@ void paging_init() {
     create_mapping(pgtbl, pa, pa, PAGE_SIZE, RWX);
   
 
-  puts(" P --> V mapping success\n");
-
   // UART --> UART
   /*UART等值映射*/
   create_mapping(pgtbl, (uint64_t)UART_ADDR, (uint64_t)UART_ADDR, (uint64_t)MAP_SIZE, RWX);
-
-  puts(" UART --> UART mapping success\n");
-
-
-
 
 }
 
