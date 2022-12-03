@@ -19,118 +19,144 @@ uint64_t* trace_pte(uint64_t* pgtbl,uint64_t va);
 
 
 
-/* void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int perm) */
+// /* void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int perm) */
 
-  /* pgtbl: 根页表基地址
-     va: 虚拟地址
-     pa: 物理地址
-     sz: 映射大小
-     perm: 权限 */
-  /* pte : 
-   63      54 36        28 27        19 18        10 9   8 7 6 5 4 3 2 1 0
-   -----------------------------------------------------------------------
-  | Reserved |   PPN[2]   |   PPN[1]   |   PPN[0]   | RSW |D|A|G|U|X|W|R|V| 
-   -----------------------------------------------------------------------
+//   /* pgtbl: 根页表基地址
+//      va: 虚拟地址
+//      pa: 物理地址
+//      sz: 映射大小
+//      perm: 权限 */
+//   /* pte : 
+//    63      54 36        28 27        19 18        10 9   8 7 6 5 4 3 2 1 0
+//    -----------------------------------------------------------------------
+//   | Reserved |   PPN[2]   |   PPN[1]   |   PPN[0]   | RSW |D|A|G|U|X|W|R|V| 
+//    -----------------------------------------------------------------------
 
-    Reserved: 全1
-    PPN[2]: 9 bits
-    PPN[1]: 9 bits
-    PPN[0]: 9 bits
-   */
+//     Reserved: 全1
+//     PPN[2]: 9 bits
+//     PPN[1]: 9 bits
+//     PPN[0]: 9 bits
+//    */
 
-void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz,
-                    int perm) {
+// void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz,
+//                     int perm) {
 
-  /* your code */
+//   // pgtbl: first address in the third-level page table (uint64_t *) 0x80007000 to 0x80008000
 
-  uint64_t va_end;
-  va_end = va + sz -1;
+//   uint64_t va_end;
+//   va_end = va + sz -1;
 
-  for (1; va<= va_end ; va += PAGE_SIZE, pa+=PAGE_SIZE){
-    uint64_t * pte_address;
+//   //go through every page in the 16MB space in the virtual address area. In total 16MB/4KB = 4K pages
+//   for (1; va<= va_end ; va += PAGE_SIZE, pa+=PAGE_SIZE){
+//     uint64_t * pte_address;
 
-    pte_address = trace_pte(pgtbl, va);
-    if(pte_address != PAGE_FAULT){
+//     // get the address of the Page-Table-Entry
+//     // everytime goes up by 8(B) in the base pgtbl
+//     pte_address = trace_pte(pgtbl, va);
+//     if(pte_address != PAGE_FAULT){
 
-      /* get ppn by eliminating offset */
-      uint64_t ppn = pa >> 12;
+//       /* get ppn by eliminating offset */
+//       uint64_t ppn = pa >> 12;
 
-      /* set pte : reserved  + ppn + perm */
-      *pte_address = 0xffc0000000000000 | (uint64_t)(ppn << 10) | (uint64_t)perm;
-    }
+//       /* set pte : reserved(10)  + ppn (9c^9^9) + perm (10)*/
+//       /* pte size:  64bit , 8B  */
+//       *pte_address = 0xffc0000000000000 | (uint64_t)(ppn << 10) | (uint64_t)perm;
+//     }
 
-  }
+//   }
 
   
-}
+// }
 
 
 
-/*   
-        RISC-V Sv39 Virtual Address and Physical Address Translation
-     38        30 29        21 20        12 11                           0
-     ---------------------------------------------------------------------
-    |   VPN[2]   |   VPN[1]   |   VPN[0]   |          page offset         |
-     ---------------------------------------------------------------------
-                            Sv39 virtual address */
-uint64_t* trace_pte(uint64_t* pgtbl,uint64_t va){
-  /* pgtbl: 根页表基地址
-     va: 虚拟地址
-   */
-  uint64_t* pte_address;
+// /*   
+//         RISC-V Sv39 Virtual Address and Physical Address Translation
+//      38        30 29        21 20        12 11                           0
+//      ---------------------------------------------------------------------
+//     |   VPN[2]   |   VPN[1]   |   VPN[0]   |          page offset         |
+//      ---------------------------------------------------------------------
+//                             Sv39 virtual address */
+// uint64_t* trace_pte(uint64_t* pgtbl,uint64_t va){
+//   /* pgtbl: 根页表基地址
+//      va: 虚拟地址
+//    */
+//   uint64_t* pte_address;
 
-  for(int i = 2; i>=0 ;i--){
-    uint64_t pte;
-    if(i==2){
-      uint64_t vpn_2 = (va >> 30) & 0x1ff;
-      pte_address = (uint64_t)(pgtbl + vpn_2);
-    }
-    if(i==1){
-      uint64_t vpn_1 = (va >> 21) & 0x1ff;
-      pte_address = (uint64_t)(pgtbl + vpn_1);
-    }
-    if(i==0){
-      uint64_t vpn_0 = (va >> 12) & 0x1ff;
-      pte_address = (uint64_t)(pgtbl + vpn_0);
-    }
+//   for(int i = 2; i>0 ;i--){
+//     uint64_t pte;
+//     if(i==2){
+//       uint64_t vpn_2 = (va >> 30) & 0x1ff;
+//       pte_address = (uint64_t)(pgtbl + vpn_2);
+//     }
+//     if(i==1){
+//       uint64_t vpn_1 = (va >> 21) & 0x1ff;
+//       pte_address = (uint64_t)(pgtbl + vpn_1);
+//     }
+
+//     /* 当i为0时，应该回到原本的函数处理 */
+//     // if(i==0){
+//     //   uint64_t vpn_0 = (va >> 12) & 0x1ff;
+//     //   pte_address = (uint64_t)(pgtbl + vpn_0);
+//     // }
     
-    /* if pte is valid */
-    if( (*pte_address & 0x1) ){
-      /* get ppn by eliminating offset */
-      uint64_t ppn = (*pte_address) >> 10;
+//     /* if pte is valid */
+//     if( (*pte_address & 0x1) ){
+//       /* get ppn by eliminating offset */
+//       uint64_t ppn = (*pte_address) >> 10;
 
-      /* get next level pgtbl */
-      pgtbl = (uint64_t*)(ppn << 12);
-    }
+//       /* get next level pgtbl */
+//       pgtbl = (uint64_t*)(ppn << 12);
+//     }
 
-    else{
-      page_count ++; 
-      pgtbl = (uint64_t)(&_end + PAGE_SIZE * page_count);
-      uint64_t ppn = ((uint64_t)pgtbl >> 12)&(0xfffffffffff);
-      *pte_address = ((uint64_t)(*pte_address) & 0xffc0000000000000) | (ppn << 10) | 0x1 ;
-    }
-  }
+//     else{
+//       page_count ++; 
 
-  return pte_address;
+//       if(PAGE_SIZE * page_count <= MAP_SIZE){
+//         pgtbl = (uint64_t)(&_end + PAGE_SIZE * page_count);
+//         uint64_t ppn = ((uint64_t)pgtbl >> 12)&(0xfffffffffff);
+//         *pte_address = ((uint64_t)(*pte_address) & 0xffc0000000000000) | (ppn << 10) | 0x1 ;
+//       }
+      
+//       else{
+//         puts("Out of Storage.\n");
+//         return PAGE_FAULT;
+//       }
+//     }
 
+//   }
 
+//   uint64_t vpn0 = ((uint64_t)va >> 12)&(0x1ff);
+//   return &pgtbl[vpn0];
 
-}
+// }
 
 
 
 /* ej implemented */
 void paging_init() { 
   uint64_t *pgtbl = &_end;
+  // pgtbl = (uint64_t *) 0x80007000
 
   /* 映射内核起始的16MB空间到高地址 */
 
   /*kernel起始的16mb映射到高地址*/
+  // P --> V
   create_mapping(pgtbl, (uint64_t)V_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+
+
+  puts(" P --> V mapping success\n");
+  // P --> P
   /*kernel起始地址的16mb做等值映射*/
   create_mapping(pgtbl,(uint64_t)P_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+
+  puts(" P --> V mapping success\n");
+
+  // UART --> UART
   /*UART等值映射*/
   create_mapping(pgtbl, (uint64_t)UART_ADDR, (uint64_t)UART_ADDR, (uint64_t)MAP_SIZE, RWX);
+
+  puts(" UART --> UART mapping success\n");
   
   // create_mapping(pgtbl, (uint64_t)(&text_start + offset), (uint64_t)(&text_start), 0x2000, RWX);
 

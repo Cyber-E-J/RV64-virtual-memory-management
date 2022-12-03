@@ -111,45 +111,78 @@ clean_loop:
 
 # 0x8000008c
 _supervisor:
-	#  satp(Supervisor Address Translation and Protection，监管者地址转换和保护)
-	# 通常 M 模式的程序在第一次进入 S 模式之前会把零写入 satp 以禁用分页s
+	# #  satp(Supervisor Address Translation and Protection，监管者地址转换和保护)
+	# # 通常 M 模式的程序在第一次进入 S 模式之前会把零写入 satp 以禁用分页s
 
-	#设置satp=0，关闭MMU
+	# #设置satp=0，关闭MMU
+	# csrw satp, zero
+
+	# #设置sp=stack_top
+	# la sp, stack_top
+	# # sp=0x80007000
+
+	# # 调用paging_init
+	# # 调用 paging_init 函数
+	# # 0x80001568
+	# call paging_init
+
+
+	# #设置satp，打开MMU
+	# addi t0, zero, 8
+	# slli t0, t0, 60 #MODE:satp[63:60]=8,ASID:satp[59:44]=0
+	# la t1, _end
+	# srli t1, t1, 12 #PPN:satp[43:0]=_end
+	# add t0, t0, t1
+	# csrw satp, t0
+	# #执行sfence.vma
+	# sfence.vma
+	# #设置stvec=trap_s
+	# la t2, trap_s
+	# li t3, 0xffffffdf80000000 #-0x80000000 + 0xffffffe000000000
+	# add t2, t2, t3 #trap_s的虚拟地址
+	# csrw stvec, t2
+	# #令s0=start_kernel
+	# la s0, start_kernel
+	# add s0, s0, t3
+	# #设置sp=init_stack_top
+	# la sp, init_stack_top
+	# add sp, sp, t3
+	# #跳转start_kernel 
+	# la t1, start_kernel
+	# add t1, t1, t3
+	# jr t1
+
+
+		#将satp设为0，关闭MMU
 	csrw satp, zero
-
-	#设置sp=stack_top
-	la sp, stack_top
-	# sp=0x80007000
-
-	# 调用paging_init
-	# 调用 paging_init 函数
-	# 0x80001568
-	call paging_init
-
-
-	#设置satp，打开MMU
-	addi t0, zero, 8
-	slli t0, t0, 60 #MODE:satp[63:60]=8,ASID:satp[59:44]=0
-	la t1, _end
-	srli t1, t1, 12 #PPN:satp[43:0]=_end
-	add t0, t0, t1
-	csrw satp, t0
-	#执行sfence.vma
-	sfence.vma
-	#设置stvec=trap_s
-	la t2, trap_s
-	li t3, 0xffffffdf80000000 #-0x80000000 + 0xffffffe000000000
-	add t2, t2, t3 #trap_s的虚拟地址
-	csrw stvec, t2
-	#令s0=start_kernel
-	la s0, start_kernel
-	add s0, s0, t3
-	#设置sp=init_stack_top
-	la sp, init_stack_top
-	add sp, sp, t3
-	#跳转start_kernel 
+	#stvec设置为trap_s在虚拟地址空间下的地址
+	la t1, trap_s
+	li t2,  0xffffffdf80000000	#0xffffffdf80000000 = -0x80000000 + 0xffffffe000000000
+	add t1, t1, t2
+	csrw stvec, t1
+	#记录start_kernel在虚拟地址空间下的地址，加载到寄存器中
 	la t1, start_kernel
-	add t1, t1, t3
+	add t1, t1, t2
+	#设置sp的值为stack_top的物理地址（设置低地址空间栈环境）
+	la sp, stack_top
+	#调用paging_init函数进行映射
+	call paging_init
+	#设置satp的值以打开MMU，修改satp后需要执行sfence.vma指令同步虚拟内存相关映射
+	add t0, zero, 8 # satp[63:60] = 8
+	sll t0, t0, 16 # satp[59:44] = 0
+	sll t0, t0, 44
+	la t3, _end
+	srl t3, t3, 12 # PPN = physical address >> 12
+	or t0, t0, t3
+	csrw satp, t0
+	sfence.vma zero,zero
+	#设置sp的值为虚拟地址空间下的init_stack_top
+	li t2,  0xffffffdf80000000
+	la sp, init_stack_top
+	add sp, sp, t2
+	#使用jr指令跳转到虚拟地址下的start_kernel，并在虚拟地址空间中执行后续语句与进程调度
+	la t1, start_kernel
+	add t1, t1, t2
 	jr t1
 
 # 0x800000fc
