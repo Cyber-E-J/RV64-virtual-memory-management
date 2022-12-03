@@ -4,11 +4,8 @@
 
 #define offset (0xffffffe000000000 - 0x80000000)
 
-#define Kernel_Page 0x80210000
-#define LOW_MEMORY 0x80211000
-#define PAGE_SIZE 4096UL
-
 int task_init_done = 0;
+extern unsigned long long _end;
 
 struct task_struct *current;
 struct task_struct *task[NR_TASKS];
@@ -23,7 +20,7 @@ void task_init(void) {
   puts("task init...\n");
 
   // initialize task[0] and current = task[0]
-  current = (struct task_struct*)Kernel_Page;
+  current = (struct task_struct*)(&_end + TASK_SIZE);
   current->state = TASK_RUNNING;
   current->counter = PRIORITY_INIT_COUNTER[0];
   current->priority = COUNTER_INIT_COUNTER[0];
@@ -31,20 +28,20 @@ void task_init(void) {
   current->pid = 0;
   task[0] = current;
   task[0]->thread.sp = (unsigned long long)task[0] + TASK_SIZE;
-  task[0]->thread.ra = &init_epc;
+  task[0]->thread.ra = (unsigned long long)&init_epc;
 
   // set other 4 tasks
   // LAB_TEST_NUM 为4
   for (int i = 1; i <= LAB_TEST_NUM; ++i) {
     /* your code */
-    task[i] = (struct task_struct*)(Kernel_Page + i * TASK_SIZE);
+    task[i] = (struct task_struct*)(&_end + (i+1) * TASK_SIZE);
     task[i]->state = TASK_RUNNING;
     task[i]->counter = PRIORITY_INIT_COUNTER[i];
     task[i]->priority = COUNTER_INIT_COUNTER[i];
     task[i]->blocked = 0;
     task[i]->pid = i;
     task[i]->thread.sp = (unsigned long long)task[i] + TASK_SIZE;
-    task[i]->thread.ra = &init_epc;
+    task[i]->thread.ra = (unsigned long long)&init_epc;
 
     puts("[PID =");
     puti(task[i]->pid);
