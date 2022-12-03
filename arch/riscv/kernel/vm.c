@@ -212,17 +212,18 @@ void paging_init() {
 
 void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int perm)
 {
-	/*your code*/
-    //提取各级虚拟页号
+	
+    //extract every vpn ( 9 bits )
     int VPN_2 = (va >> 30) & 0x1FF;
     int VPN_1 = (va >> 21) & 0x1FF;
     int VPN_0 = (va >> 12) & 0x1FF;
+
 
     uint64_t *second_pgtbl; //二级页表的基地址
     if ((pgtbl[VPN_2] & 0x1) == 0)
     {
         page_count++;   //分配新的物理页
-        second_pgtbl = (void *)((uint64_t)(&_end) + 0x1000 * page_count); //获取基地址
+        second_pgtbl = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count); //获取基地址
         for (int i = 0; i < 512; i++)   //初始化
             second_pgtbl[i] = 0;
         pgtbl[VPN_2] |= (((uint64_t)second_pgtbl >> 12) << 10); //存储二级页表的物理基页
@@ -247,12 +248,4 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
     third_pgtbl[VPN_0] |= 0x1;              //valid置位
     third_pgtbl[VPN_0] |= perm << 1;        //权限置位
     
-    /*
-    if ((third_pgtbl[VPN_0] & 0x1) == 0)
-    {
-        third_pgtbl[VPN_0] |= (pa >> 12) << 10; //存储实际的物理页
-        third_pgtbl[VPN_0] |= 0x1;              //valid置位
-        third_pgtbl[VPN_0] |= perm << 1;        //权限置位
-    }
-    */
 }
