@@ -73,11 +73,11 @@ void do_timer(void) {
 void schedule(void) { 
   /* your code */ 
   unsigned char next;
-  int finish = 1;
+  // int finish = 1;
   int shortest_counter = LAB_TEST_COUNTER+100;// initial as max
   int shortest_pid = 0;
   for(int i=LAB_TEST_NUM;i>=1;i--){
-    if(task[i]->counter > 0) finish = 0;
+    // if(task[i]->counter > 0) finish = 0;
     if(task[i]->counter > 0 && task[i]->counter < shortest_counter){
       shortest_pid = i;
       shortest_counter = task[i]->counter;
@@ -87,8 +87,8 @@ void schedule(void) {
   if(shortest_pid == 0) {
     puts("all is done, reset all.\n");
     for(int i=LAB_TEST_COUNTER; i>=1; i--){
-      task[i]->counter = rand()%100;
-      task[i]->priority = rand()%100;
+      task[i]->counter = rand();
+      task[i]->priority = rand();
       puts("[*PID = ");
       puti(task[i]->pid);
       puts("] Reset: counter = ");
@@ -99,6 +99,7 @@ void schedule(void) {
     }
     schedule();
     next = 0;
+    return;
   }
   else //next = task[shortest_pid];
     next = shortest_pid;
@@ -110,10 +111,10 @@ void schedule(void) {
     puti(task[next]->pid);
     puts(" ] Switch from task ");
     puti(current->pid);
-    puts("["); puti((unsigned long)current->thread.sp); 
+    puts("["); putullHex(current->thread.sp); 
     puts("] to task "); 
     puti(task[next]->pid);
-    puts("["); puti((unsigned long)task[next]->thread.sp); 
+    puts("["); putullHex(task[next]->thread.sp); 
     puts("], prio: "); 
     puti(task[next]->priority);
     puts(", counter: ");
