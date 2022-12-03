@@ -208,11 +208,33 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
     int VPN_1 = (va >> 21) & 0x1FF;
     int VPN_0 = (va >> 12) & 0x1FF;
 
+    // for(int i=2;i>=1;i--){
+    //     uint64_t * pgtbl_current;
+    //     // the pagetable pointer
+    //     int VPN;
+    //     if(i==2){
+    //         VPN = VPN_2;
+    //     }else VPN = VPN_1;
+    //     if( pgtbl[VPN] & 0x1 == 0){
+    //         // allocate a new page
+    //         page_count++;
+    //         pgtbl_current = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count);
+
+    //         //set all entries to 0
+    //         for(int i=0;i<512;i++) pgtbl_current[i] == 0;
+
+    //         pgtbl[VPN] |= (((uint64_t)pgtbl_current >> 12) << 10); //store ppn into pte at the first level
+    //         pgtbl[VPN] |= 0x1; // set pte to be valid
+    //     }
+    //     pgtbl_current = (void *) ( (pgtbl[VPN] >> 10) << 12);
+    //     // allocate the second pgtbl pointer
+        
+    // }
+
 
     uint64_t * pgtbl_2;
         // the third pagetable pointer
     if( (pgtbl[VPN_2] & 0x1 == 0))
-
     // allocate a new page
     {
         page_count++;
@@ -225,19 +247,14 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
         pgtbl[VPN_2] |= 0x1; // set pte to be valid
 
     }
-
     pgtbl_2 = (void *) ( (pgtbl[VPN_2] >> 10) << 12);
-
     // allocate the second pgtbl pointer
 
 
-
     /* same as above, the third pagetable */
-
         uint64_t * pgtbl_3;
         // the second pagetable pointer
     if( (pgtbl[VPN_1] & 0x1 == 0))
-
     // allocate a new page
     {
         page_count++;
@@ -250,14 +267,18 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
         pgtbl[VPN_1] |= 0x1; // set pte to be valid
 
     }
-
     pgtbl_3 = (void *) ( (pgtbl[VPN_1] >> 10) << 12);
 
-    // allocate the third pgtbl pointer
+    allocate the third pgtbl pointer
 
 
     pgtbl_3[VPN_0] |= (pa >> 12) << 10; //store ppn into pte at the first level
     pgtbl_3[VPN_0] |= 0x1; // set pte to be valid
     pgtbl_3[VPN_0] |= perm << 1; // set permission
+
+    // pgtbl_current[VPN_0] |= (pa >> 12) << 10; //store ppn into pte at the first level
+    // pgtbl_current[VPN_0] |= 0x1; // set pte to be valid
+    // pgtbl_current[VPN_0] |= perm << 1; // set permission
+
     
 }
