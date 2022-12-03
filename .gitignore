@@ -1,5 +1,0 @@
-*.o
-System.map
-vmlinux
-.DS_Store
-.vscode/
