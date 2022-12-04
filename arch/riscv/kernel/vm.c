@@ -255,12 +255,10 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
 
     uint64_t * pgtbl_2;
         // the third pagetable pointer
-    if( (pgtbl[VPN_2] & 0x1 == 0))
-
-    // allocate a new page
+    if( (pgtbl[VPN_2] & 0x1) == 0)// allocate a new page
     {
         page_count++;
-        pgtbl_2 = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count);
+        pgtbl_2 = (void *)((uint64_t)(&_end) + 0x1000 * page_count);
 
         //set all entries to 0
         for(int i=0;i<512;i++) pgtbl_2[i] == 0;
@@ -275,12 +273,11 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
     // allocate the second pgtbl pointer
 
 
-
     /* same as above, the third pagetable */
 
-        uint64_t * pgtbl_3;
+    uint64_t * pgtbl_3;
         // the second pagetable pointer
-    if( (pgtbl_2[VPN_1] & 0x1 == 0))
+    if( (pgtbl_2[VPN_1] & 0x1) == 0)
 
     // allocate a new page
     {
@@ -290,12 +287,12 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
         //set all entries to 0
         for(int i=0;i<512;i++) pgtbl_3[i] == 0;
 
-        pgtbl[VPN_1] |= (((uint64_t)pgtbl_3 >> 12) << 10); //store ppn into pte at the first level
-        pgtbl[VPN_1] |= 0x1; // set pte to be valid
+        pgtbl_2[VPN_1] |= (((uint64_t)pgtbl_3 >> 12) << 10); //store ppn into pte at the first level
+        pgtbl_2[VPN_1] |= 0x1; // set pte to be valid
 
     }
 
-    pgtbl_3 = (void *) ( (pgtbl[VPN_1] >> 10) << 12);
+    pgtbl_3 = (void *) ( (pgtbl_2[VPN_1] >> 10) << 12);
 
     // allocate the third pgtbl pointer
 
@@ -304,7 +301,11 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
     pgtbl_3[VPN_0] |= 0x1; // set pte to be valid
     pgtbl_3[VPN_0] |= perm << 1; // set permission
     
+
+
+
 }
+
 
 
 
