@@ -4,6 +4,9 @@
 #define PAGE_SIZE 4096L //4kb
 #define PAGE_FAULT -1
 #define RWX 7
+#define RX 5
+#define RW 3
+#define R 1
 
 extern unsigned long long text_start;
 extern unsigned long long rodata_start;
@@ -134,37 +137,73 @@ uint64_t* trace_pte(uint64_t* pgtbl,uint64_t va);
 
 /* ej implemented */
 void paging_init() { 
-  uint64_t *pgtbl = &_end;
-  // pgtbl = (uint64_t *) 0x80007000
 
-  /* initialize all pagetables */
+    /* previous version */
 
-  for (int i = 0; i < 512; i++)
-      pgtbl[i] = 0;
+//   uint64_t *pgtbl = &_end;
+//   // pgtbl = (uint64_t *) 0x80007000
 
-  /* 映射内核起始的16MB空间到高地址 */
-  /* kernel起始的16mb映射到高地址*/
+//   /* initialize all pagetables */
 
-  // P --> V
-  // create_mapping(pgtbl, (uint64_t)V_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+//   for (int i = 0; i < 512; i++)
+//       pgtbl[i] = 0;
 
-  for (uint64_t va = V_KERNEL; va < V_KERNEL + MAP_SIZE; va = va + PAGE_SIZE)
-  {
-        create_mapping(pgtbl, va, va - offset, PAGE_SIZE, RWX);
-        create_mapping(pgtbl, va - offset, va - offset, PAGE_SIZE, RWX);
-  }
+//   /* 映射内核起始的16MB空间到高地址 */
+//   /* kernel起始的16mb映射到高地址*/
 
-  // P --> P
-  /*kernel起始地址的16mb做等值映射*/
-  // create_mapping(pgtbl,(uint64_t)P_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+//   // P --> V
+//   // create_mapping(pgtbl, (uint64_t)V_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
 
-  for(uint64_t pa = P_KERNEL; pa < P_KERNEL + MAP_SIZE; pa = pa + PAGE_SIZE)
-    create_mapping(pgtbl, pa, pa, PAGE_SIZE, RWX);
+//   for (uint64_t va = V_KERNEL; va < V_KERNEL + MAP_SIZE; va = va + PAGE_SIZE)
+//   {
+//         create_mapping(pgtbl, va, va - offset, PAGE_SIZE, RWX);
+//         create_mapping(pgtbl, va - offset, va - offset, PAGE_SIZE, RWX);
+//   }
+
+//   // P --> P
+//   /*kernel起始地址的16mb做等值映射*/
+//   // create_mapping(pgtbl,(uint64_t)P_KERNEL, (uint64_t)P_KERNEL, (uint64_t)MAP_SIZE, RWX);
+
+//   for(uint64_t pa = P_KERNEL; pa < P_KERNEL + MAP_SIZE; pa = pa + PAGE_SIZE)
+//     create_mapping(pgtbl, pa, pa, PAGE_SIZE, RWX);
   
 
-  // UART --> UART
-  /*UART等值映射*/
-  create_mapping(pgtbl, (uint64_t)UART_ADDR, (uint64_t)UART_ADDR, (uint64_t)MAP_SIZE, RWX);
+//   // UART --> UART
+//   /*UART等值映射*/
+//   create_mapping(pgtbl, (uint64_t)UART_ADDR, (uint64_t)UART_ADDR, (uint64_t)MAP_SIZE, RWX);
+
+
+    /* latter version */
+
+
+
+    uint64_t * pgtbl = &_end;
+    for( int i = 0;i<512;i++) pgtbl[i]=0;
+
+    /* for the text part, composing of both high-address and equal value */
+    for(uint64_t pa = P_KERNEL; pa < P_KERNEL + (uint64_t)(&rodata_start) - (uint64_t)(&text_start); pa = pa + PAGE_SIZE){
+        create_mapping(pgtbl, pa + offset, pa , PAGE_SIZE, RX);
+        create_mapping(pgtbl, pa , pa , PAGE_SIZE, RX);
+    }
+
+    /* for the rodata part, composing of both high-address and equal value */
+    for(uint64_t pa = P_KERNEL + (uint64_t)(&rodata_start) - (uint64_t)(&text_start); pa < P_KERNEL + (uint64_t)(&data_start) - (uint64_t)(&text_start); pa = pa + PAGE_SIZE){
+        create_mapping(pgtbl, pa + offset, pa, PAGE_SIZE, R);
+        create_mapping(pgtbl, pa, pa, PAGE_SIZE, R);
+    }
+
+    //for data parts,  high-address mapping and equal value mapping
+    for(uint64_t pa = P_KERNEL + (uint64_t)(&data_start) - (uint64_t)(&text_start); pa < 0x81000000; pa = pa + PAGE_SIZE){
+        create_mapping(pgtbl, pa + offset, pa, PAGE_SIZE, RW);
+        create_mapping(pgtbl, pa, pa, PAGE_SIZE, RW);
+    }
+
+    //for hardware
+    for (uint64_t pa = 0x10000000; pa < 0x10001000; pa += PAGE_SIZE)
+    {
+        create_mapping(pgtbl, pa, pa, PAGE_SIZE, RW);
+    }
+
 
 }
 
