@@ -174,8 +174,11 @@ void paging_init() {
 
 
     /* latter version */
-
-
+    /*
+    /*
+    /*
+    /*
+     */
 
     uint64_t * pgtbl = &_end;
     for( int i = 0;i<512;i++) pgtbl[i]=0;
@@ -277,7 +280,7 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
 
         uint64_t * pgtbl_3;
         // the second pagetable pointer
-    if( (pgtbl[VPN_1] & 0x1 == 0))
+    if( (pgtbl_2[VPN_1] & 0x1 == 0))
 
     // allocate a new page
     {
@@ -285,7 +288,7 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
         pgtbl_3 = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count);
 
         //set all entries to 0
-        for(int i=0;i<512;i++) pgtbl_2[i] == 0;
+        for(int i=0;i<512;i++) pgtbl_3[i] == 0;
 
         pgtbl[VPN_1] |= (((uint64_t)pgtbl_3 >> 12) << 10); //store ppn into pte at the first level
         pgtbl[VPN_1] |= 0x1; // set pte to be valid
@@ -302,3 +305,6 @@ void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int 
     pgtbl_3[VPN_0] |= perm << 1; // set permission
     
 }
+
+
+
