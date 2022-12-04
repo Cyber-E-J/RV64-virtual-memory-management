@@ -200,85 +200,50 @@ void paging_init() {
 //   create_mapping(pgtbl, UART, UART, size, 3);  //data XWR = 011        
 // }
 
+
 void create_mapping(uint64_t *pgtbl, uint64_t va, uint64_t pa, uint64_t sz, int perm)
 {
-	
-    //extract every vpn ( 9 bits )
+	/*your code*/
+    //提取各级虚拟页号
     int VPN_2 = (va >> 30) & 0x1FF;
     int VPN_1 = (va >> 21) & 0x1FF;
     int VPN_0 = (va >> 12) & 0x1FF;
 
-    // for(int i=2;i>=1;i--){
-    //     uint64_t * pgtbl_current;
-    //     // the pagetable pointer
-    //     int VPN;
-    //     if(i==2){
-    //         VPN = VPN_2;
-    //     }else VPN = VPN_1;
-    //     if( pgtbl[VPN] & 0x1 == 0){
-    //         // allocate a new page
-    //         page_count++;
-    //         pgtbl_current = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count);
+    uint64_t *second_pgtbl; //二级页表的基地址
+    if ((pgtbl[VPN_2] & 0x1) == 0)
+    {
+        page_count++;   //分配新的物理页
+        second_pgtbl = (void *)((uint64_t)(&_end) + 0x1000 * page_count); //获取基地址
+        for (int i = 0; i < 512; i++)   //初始化
+            second_pgtbl[i] = 0;
+        pgtbl[VPN_2] |= (((uint64_t)second_pgtbl >> 12) << 10); //存储二级页表的物理基页
+        pgtbl[VPN_2] |= 0x1; //对valid位置位
+    }
+    second_pgtbl = (void *)((pgtbl[VPN_2] >> 10) << 12);
 
-    //         //set all entries to 0
-    //         for(int i=0;i<512;i++) pgtbl_current[i] == 0;
-
-    //         pgtbl[VPN] |= (((uint64_t)pgtbl_current >> 12) << 10); //store ppn into pte at the first level
-    //         pgtbl[VPN] |= 0x1; // set pte to be valid
-    //     }
-    //     pgtbl_current = (void *) ( (pgtbl[VPN] >> 10) << 12);
-    //     // allocate the second pgtbl pointer
-        
-    // }
-
-
-    uint64_t * pgtbl_2;
-        // the third pagetable pointer
-    if( (pgtbl[VPN_2] & 0x1 == 0))
-    // allocate a new page
+    uint64_t *third_pgtbl;  //三级页表的基地址
+    if ((second_pgtbl[VPN_1] & 0x1) == 0)
     {
         page_count++;
-        pgtbl_2 = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count);
-
-        //set all entries to 0
-        for(int i=0;i<512;i++) pgtbl_2[i] == 0;
-
-        pgtbl[VPN_2] |= (((uint64_t)pgtbl_2 >> 12) << 10); //store ppn into pte at the first level
-        pgtbl[VPN_2] |= 0x1; // set pte to be valid
-
+        third_pgtbl = (void *)((uint64_t)(&_end) + 0x1000 * page_count); //获取基地址
+        for (int i = 0; i < 512; i++)
+            third_pgtbl[i] = 0;
+        //存储三级页表的物理基页
+        second_pgtbl[VPN_1] |= (((uint64_t)third_pgtbl >> 12) << 10); 
+        second_pgtbl[VPN_1] |= 0x1;
     }
-    pgtbl_2 = (void *) ( (pgtbl[VPN_2] >> 10) << 12);
-    // allocate the second pgtbl pointer
+    third_pgtbl = (void *)((second_pgtbl[VPN_1] >> 10) << 12);
 
-
-    /* same as above, the third pagetable */
-        uint64_t * pgtbl_3;
-        // the second pagetable pointer
-    if( (pgtbl[VPN_1] & 0x1 == 0))
-    // allocate a new page
-    {
-        page_count++;
-        pgtbl_3 = (void *)((uint64_t)(&_end) + PAGE_SIZE * page_count);
-
-        //set all entries to 0
-        for(int i=0;i<512;i++) pgtbl_2[i] == 0;
-
-        pgtbl[VPN_1] |= (((uint64_t)pgtbl_3 >> 12) << 10); //store ppn into pte at the first level
-        pgtbl[VPN_1] |= 0x1; // set pte to be valid
-
-    }
-    pgtbl_3 = (void *) ( (pgtbl[VPN_1] >> 10) << 12);
-
-    allocate the third pgtbl pointer
-
-
-    pgtbl_3[VPN_0] |= (pa >> 12) << 10; //store ppn into pte at the first level
-    pgtbl_3[VPN_0] |= 0x1; // set pte to be valid
-    pgtbl_3[VPN_0] |= perm << 1; // set permission
-
-    // pgtbl_current[VPN_0] |= (pa >> 12) << 10; //store ppn into pte at the first level
-    // pgtbl_current[VPN_0] |= 0x1; // set pte to be valid
-    // pgtbl_current[VPN_0] |= perm << 1; // set permission
-
+    third_pgtbl[VPN_0] |= (pa >> 12) << 10; //存储实际的物理页
+    third_pgtbl[VPN_0] |= 0x1;              //valid置位
+    third_pgtbl[VPN_0] |= perm << 1;        //权限置位
     
+    /*
+    if ((third_pgtbl[VPN_0] & 0x1) == 0)
+    {
+        third_pgtbl[VPN_0] |= (pa >> 12) << 10; //存储实际的物理页
+        third_pgtbl[VPN_0] |= 0x1;              //valid置位
+        third_pgtbl[VPN_0] |= perm << 1;        //权限置位
+    }
+    */
 }
